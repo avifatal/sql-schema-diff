@@ -10,14 +10,7 @@
         }
     ],
     "require": {
-        "illuminate/database": "^5.6",
-        "tightenco/collect": "^5.6"
-    },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/avifatal/sql-schema-diff",
-            "reference": "master"
-        }
-    ]
+        "illuminate/database": "^5.5",
+        "tightenco/collect": "^5.5"
+    }
 }
