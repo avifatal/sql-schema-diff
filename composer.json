@@ -12,11 +12,5 @@
     "require": {
         "illuminate/database": "^5.6",
         "tightenco/collect": "^5.6"
-    },
-    "repositories": [
-        {
-            "type": "git",
-            "url": "https://github.com/avifatal/sql-schema-diff"
-        }
-    ]
+    }
 }
