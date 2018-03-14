@@ -15,8 +15,9 @@
     },
     "repositories": [
         {
-            "type": "git",
-            "url": "https://github.com/avifatal/sql-schema-diff"
+            "type": "vcs",
+            "url": "https://github.com/avifatal/sql-schema-diff",
+            "reference": "master"
         }
     ]
 }
