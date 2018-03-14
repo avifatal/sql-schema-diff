@@ -69,7 +69,7 @@ class MysqlConnectionDetails implements ISqlConnectionDetails
 
     public function getDatabase(): string
     {
-        return $this->getDatabase();
+        return $this->database;
     }
 
     public function setDatabase(string $database)

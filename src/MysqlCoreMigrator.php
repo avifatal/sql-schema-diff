@@ -16,8 +16,8 @@ class MysqlCoreMigrator implements ICoreMigrator
     private $source_db;
     private $target_db;
     private $executeMigrator;
-    private $source_connection;
-    private $target_connection;
+    private $sourceConnection;
+    private $targetConnection;
 
     public function __construct(ISqlConnectionDetails $source, ISqlConnectionDetails $target, IExecuteMigrator $executeMigrator)
     {
@@ -52,8 +52,8 @@ class MysqlCoreMigrator implements ICoreMigrator
         $this->source_db = $source_capsule->getConnection()->getDatabaseName();
         $this->target_db = $target_capsule->getConnection()->getDatabaseName();
 
-        $this->source_connection = $source_capsule->getConnection();
-        $this->target_connection = $target_capsule->getConnection();
+        $this->sourceConnection = $source_capsule->getConnection();
+        $this->targetConnection = $target_capsule->getConnection();
 
         $this->executeMigrator = $executeMigrator;
 
@@ -61,9 +61,9 @@ class MysqlCoreMigrator implements ICoreMigrator
 
     public function migrate()
     {
-        $this->target_connection->unprepared("SET foreign_key_checks = 0;");
-        $source_tables = $this->skip($this->getAllTables($this->source_connection));
-        $target_tables = $this->skip($this->getAllTables($this->target_connection));
+        $this->targetConnection->unprepared("SET foreign_key_checks = 0;");
+        $source_tables = $this->skip($this->getAllTables($this->sourceConnection));
+        $target_tables = $this->skip($this->getAllTables($this->targetConnection));
 
         $create = $source_tables->diff($target_tables);
         $this->createTables($create);
@@ -92,7 +92,7 @@ class MysqlCoreMigrator implements ICoreMigrator
             $this->dropColumns($table);
         }
 
-        $this->target_connection->unprepared("SET foreign_key_checks = 1;");
+        $this->targetConnection->unprepared("SET foreign_key_checks = 1;");
 
     }
 
@@ -103,8 +103,8 @@ class MysqlCoreMigrator implements ICoreMigrator
 
     private function diffColumns($table)
     {
-        $target_cols = $this->toCollectionArray($this->getAllColmns($table, $this->target_connection));
-        $source_cols = $this->toCollectionArray($this->getAllColmns($table, $this->source_connection));
+        $target_cols = $this->toCollectionArray($this->getAllColmns($table, $this->targetConnection));
+        $source_cols = $this->toCollectionArray($this->getAllColmns($table, $this->sourceConnection));
 
         foreach ($source_cols as $key => $val) {
             $diff = array_diff_assoc($val, $target_cols[$key]);
@@ -117,8 +117,8 @@ class MysqlCoreMigrator implements ICoreMigrator
 
     private function addColumns($table)
     {
-        $target_cols = $this->toCollectionArray($this->getAllColmns($table, $this->target_connection));
-        $source_cols = $this->toCollectionArray($this->getAllColmns($table, $this->source_connection));
+        $target_cols = $this->toCollectionArray($this->getAllColmns($table, $this->targetConnection));
+        $source_cols = $this->toCollectionArray($this->getAllColmns($table, $this->sourceConnection));
 
         $add_cols = array_diff_key($source_cols, $target_cols);
 
@@ -148,8 +148,8 @@ class MysqlCoreMigrator implements ICoreMigrator
 
     private function dropColumns($table)
     {
-        $target_cols = $this->getAllColmns($table, $this->target_connection);
-        $source_cols = $this->getAllColmns($table, $this->source_connection);
+        $target_cols = $this->getAllColmns($table, $this->targetConnection);
+        $source_cols = $this->getAllColmns($table, $this->sourceConnection);
         $drop_cols = ($target_cols->diffKeys($source_cols));
 
         foreach ($drop_cols as $key => $col) {
@@ -169,16 +169,16 @@ class MysqlCoreMigrator implements ICoreMigrator
 
     private function addFks($table)
     {
-        $source_fk = $this->getAllFK($table, $this->source_connection);
-        $target_fk = $this->getAllFK($table, $this->target_connection);
+        $source_fk = $this->getAllFK($table, $this->sourceConnection);
+        $target_fk = $this->getAllFK($table, $this->targetConnection);
         $add_fks = $source_fk->diffKeys($target_fk);
         $this->addFk($add_fks, $table);
     }
 
     private function dropFKs($table)
     {
-        $source_fk = $this->getAllFK($table, $this->source_connection);
-        $target_fk = $this->getAllFK($table, $this->target_connection);
+        $source_fk = $this->getAllFK($table, $this->sourceConnection);
+        $target_fk = $this->getAllFK($table, $this->targetConnection);
         $drop_fks = $target_fk->diffKeys($source_fk);
         $this->dropFk($drop_fks, $table);
     }
@@ -239,7 +239,7 @@ class MysqlCoreMigrator implements ICoreMigrator
     {
 
         foreach ($create as $key => $table) {
-            $res = $this->source_connection->select("show create table `{$table}` ;");
+            $res = $this->sourceConnection->select("show create table `{$table}` ;");
             $create_table = (collect($res)->toArray()[0]->{"Create Table"});
             $this->executeMigrator->streamingInfo("The table $table was not found on the desitnation database ($this->target_db), would you like to create it?");
             $this->exec($create_table);
