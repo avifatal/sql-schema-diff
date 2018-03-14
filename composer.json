@@ -1,0 +1,22 @@
+{
+    "name": "avifatal/sql-schema-diff",
+    "description": "Automatically identify changes between sql schemas and deploy.",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Avi Fatal",
+            "email": "avi.fatal@gmail.com"
+        }
+    ],
+    "require": {
+        "illuminate/database": "^5.6",
+        "tightenco/collect": "^5.6"
+    },
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/avifatal/sql-schema-diff"
+        }
+    ]
+}
