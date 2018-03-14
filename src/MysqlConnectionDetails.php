@@ -35,9 +35,9 @@ class MysqlConnectionDetails implements ISqlConnectionDetails
     }
 
     /**
-     * @return strong
+     * @return string
      */
-    public function getUserName(): strong
+    public function getUserName(): string
     {
         return $this->userName;
     }
@@ -45,7 +45,7 @@ class MysqlConnectionDetails implements ISqlConnectionDetails
     /**
      * @param strong $userName
      */
-    public function setUserName(strong $userName)
+    public function setUserName(string $userName)
     {
         $this->userName = $userName;
     }
