@@ -88,13 +88,66 @@ class MysqlCoreMigrator implements ICoreMigrator
             $this->diffColumns($table);
         }
 
+
+
+        foreach ($source_tables as $key => $table) {
+            $this->dropKeys($table);
+        }
+
+        foreach ($source_tables as $key => $table) {
+            $this->addKeys($table);
+        }
+
         foreach ($source_tables as $key => $table) {
             $this->dropColumns($table);
         }
-
         $this->targetConnection->unprepared("SET foreign_key_checks = 1;");
-
     }
+
+    private function dropKeys($table)
+    {
+        $target_cols = $this->toCollectionArray($this->getAllKeys($table, $this->targetConnection));
+        $source_cols = $this->toCollectionArray($this->getAllKeys($table, $this->sourceConnection));
+        $drop = (array_diff_key($target_cols, $source_cols));
+        foreach ($drop as $key => $val) {
+            $this->dropKey($table, $val['INDEX_NAME']);
+        }
+    }
+
+    private function addKeys($table)
+    {
+        $target_cols = $this->toCollectionArray($this->getAllKeys($table, $this->targetConnection));
+        $source_cols = $this->toCollectionArray($this->getAllKeys($table, $this->sourceConnection));
+        $add = (array_diff_key($source_cols,$target_cols));
+        foreach ($add as $key => $val) {
+            $this->addKey($table, $val['INDEX_NAME'],$val['COLUMN_NAME']);
+        }
+    }
+    public function addKey(string $table, string $index_name, string $column_name){
+        $query = "ALTER TABLE {$this->target_db}.{$table}
+                  ADD INDEX {$index_name} (`$column_name`)";
+        $this->exec($query);
+    }
+
+
+    public function dropKey(string $table,string $index_name){
+        $query = "ALTER TABLE `{$this->target_db}`.`{$table}`
+                  DROP INDEX {$index_name}";
+        $this->exec($query);
+    }
+
+    private function getAllKeys($table, Connection $connection){
+        $query = "
+                SELECT INDEX_NAME, COLUMN_NAME
+                FROM `information_schema`.`statistics`
+                WHERE TABLE_SCHEMA = '{$connection->getDatabaseName()}'
+                      AND TABLE_NAME = '{$table}'
+                ORDER BY INDEX_NAME ASC";
+
+        $res = (collect($connection->select($query)));
+        return $res->keyBy('COLUMN_NAME');
+    }
+
 
     private function toCollectionArray($collection)
     {
