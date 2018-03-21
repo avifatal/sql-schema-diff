@@ -88,8 +88,6 @@ class MysqlCoreMigrator implements ICoreMigrator
             $this->diffColumns($table);
         }
 
-
-
         foreach ($source_tables as $key => $table) {
             $this->dropKeys($table);
         }
@@ -161,6 +159,7 @@ class MysqlCoreMigrator implements ICoreMigrator
 
         foreach ($source_cols as $key => $val) {
             $diff = array_diff_assoc($val, $target_cols[$key]);
+
             if (!empty($diff)) {
                 $this->changeSingleColumn($source_cols[$key], $table);
             }
@@ -192,10 +191,20 @@ class MysqlCoreMigrator implements ICoreMigrator
 
     private function singleColumn($col, $table, $do)
     {
+        $character_set = "";
+        if(isset($col['CHARACTER_SET_NAME'])){
+            $character_set = ", CHARACTER SET {$col['CHARACTER_SET_NAME']}";
+        }
+        $collate = "";
+        if(isset($col['COLLATION_NAME'])){
+            $collate = ", COLLATE {$col['COLLATION_NAME']}";
+        }
+
+
         $null = $col['IS_NULLABLE'] == 'YES' ? $null = 'NULL' : 'NOT NULL';
         $default = !empty($col['COLUMN_DEFAULT']) ? 'DEFAULT ' . $col['COLUMN_DEFAULT'] : '';
         $query = "ALTER TABLE {$this->target_db}.{$table}
-                  $do COLUMN {$col['COLUMN_NAME']} {$col['COLUMN_TYPE']} $null $default;";
+                  $do COLUMN `{$col['COLUMN_NAME']}` {$col['COLUMN_TYPE']} $null $default $character_set $collate;";
         $this->exec($query);
     }
 
@@ -265,7 +274,15 @@ class MysqlCoreMigrator implements ICoreMigrator
     private function getAllColmns($table, Connection $connection)
     {
         $query = "SELECT
-                        COLUMN_NAME,COLUMN_DEFAULT,IS_NULLABLE,DATA_TYPE,CHARACTER_MAXIMUM_LENGTH,COLUMN_TYPE,EXTRA
+                        COLUMN_NAME,
+                        COLUMN_DEFAULT,
+                        IS_NULLABLE,
+                        DATA_TYPE,
+                        CHARACTER_MAXIMUM_LENGTH,
+                        COLUMN_TYPE,
+                        EXTRA,
+                        CHARACTER_SET_NAME,
+                        COLLATION_NAME
                         FROM
                         INFORMATION_SCHEMA.COLUMNS
                         WHERE TABLE_SCHEMA = '{$connection->getDatabaseName()}' AND TABLE_NAME = '$table'";
